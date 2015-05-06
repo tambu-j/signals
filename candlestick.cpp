@@ -24,7 +24,7 @@ void candlestick(int samplelen, double *samplet, double lookback, int datalen, d
         startTIdx[i] = hint = j;
     }
 
-    const int nout = 5;
+    const int nout = 6;
     results.resize(nout*samplelen);
     #pragma omp parallel for
     for (int i = 0; i < samplelen; ++i) {
@@ -32,20 +32,27 @@ void candlestick(int samplelen, double *samplet, double lookback, int datalen, d
         double close = std::numeric_limits<double >::quiet_NaN();
         double high = std::numeric_limits<double >::quiet_NaN();
         double low = std::numeric_limits<double >::quiet_NaN();
+        double volume = std::numeric_limits<double >::quiet_NaN();
         double vwap = std::numeric_limits<double >::quiet_NaN();
         bool inited = false;
         double vwapNum = 0.;
         double vwapDen = 0.;
         int j = startTIdx[i];
         for( ; j < datalen && t[j] < samplet[i]; ++j) {
-            if (inited) {
+            if (inited) { // could take this branch out if it is too slow
                 high = px[j] > high ? px[j] : high;
                 low = px[j] < low ? px[j] : low;
                 vwapNum += px[j] * sz[j];
                 vwapDen += sz[j];
             }
             else {
-                open = high = low = px[j];
+		// open should be the price at the time of the start of the window
+                if (t[j] == (samplet[i]-lookback))
+			open = px[j];
+		else if ((t[j] > (samplet[i]-lookback)) && j > 0) {
+			open = px[j-1];
+		}
+		high = low = px[j];
                 vwapNum = px[j] * sz[j];
                 vwapDen = sz[j];
                 inited = true;
@@ -59,12 +66,14 @@ void candlestick(int samplelen, double *samplet, double lookback, int datalen, d
                 close = px[datalen-1];
 
         vwap = vwapNum > 0. ? vwapNum/vwapDen : vwap;
+	volume = vwapDen;
 
         results[i*nout] =  open;
         results[i*nout + 1] = close;
         results[i*nout + 2] = high;
         results[i*nout + 3] = low;
-        results[i*nout + 4] = vwap;
+        results[i*nout + 4] = volume;
+        results[i*nout + 5] = vwap;
     }
 }
 
