@@ -38,7 +38,7 @@ public:
         // less than t - window_ otherwise we've 
         // written over data we need)
         //
-        // we assume t is positive and monotonicaly increasing, and don't bother checking...?
+        // we assume t is positive and monotonically increasing, and don't bother checking...?
         //
         double tzero = t - window_;
         if ( (++cur_ % capacity_) == 0 ) {
