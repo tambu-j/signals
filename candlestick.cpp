@@ -1,4 +1,5 @@
 #include <vector>
+#include <limits>
 
 void candlestick(int samplelen, double *samplet, double lookback, int datalen, double *t, double *px, double *sz, std::vector<double>& results)
 {
